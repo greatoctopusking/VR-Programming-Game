@@ -48,11 +48,15 @@ public class CodeManager : MonoBehaviour
             bool completed = false;
             
             cur.OnComplete += () => completed = true;
-            
+
+            cur.SetHighlight(true);
+
             cur.work();
-            
+
             yield return new WaitUntil(() => completed);
-            
+
+            cur.SetHighlight(false);
+
             cur.OnComplete -= () => completed = true;
             
             if (cur is WhileCode whileCode)
@@ -95,6 +99,8 @@ public class CodeManager : MonoBehaviour
         }
         
         playRoutine = null;
+        
+
     }
 
     void Update()
