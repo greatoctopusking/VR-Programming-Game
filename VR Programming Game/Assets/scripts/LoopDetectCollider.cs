@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class LoopDetectCollider : MonoBehaviour
 {
@@ -8,90 +9,87 @@ public class LoopDetectCollider : MonoBehaviour
     {
         if (hasConnected) return;
 
-        UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grabInteractable = transform.parent.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
-        if (grabInteractable != null && grabInteractable.isSelected)
-        {
-            return;
-        }
-
-        UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable otherGrab = other.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
-        if (otherGrab != null && otherGrab.isSelected)
-        {
-            return;
-        }
-
+        // 1. 获取组件：父物体必须是 WhileCode，对方必须是 Code
         WhileCode parentWhile = transform.parent.GetComponent<WhileCode>();
-        if (parentWhile == null)
+        Code otherCode = other.GetComponentInParent<Code>();
+
+        if (parentWhile == null || otherCode == null || parentWhile.gameObject == otherCode.gameObject)
         {
             return;
         }
-        
-        if (!other.CompareTag("CodeBlock"))
+
+        // 2. 状态检查：如果 LoopNext 已存在，不执行
+        if (parentWhile.LoopNext != null)
         {
             return;
         }
-        
-        Code otherCode = other.GetComponent<Code>();
-        if (otherCode == null)
+
+        // 3. 标签检查
+        if (!other.CompareTag("CodeBlock") && !otherCode.CompareTag("CodeBlock"))
         {
             return;
         }
-        
+
+        // 4. 抓取检查：如果任意一方正被抓着，不进行吸附
+        XRGrabInteractable myGrab = transform.parent.GetComponent<XRGrabInteractable>();
+        if (myGrab != null && myGrab.isSelected) return;
+
+        XRGrabInteractable otherGrab = otherCode.GetComponent<XRGrabInteractable>();
+        if (otherGrab != null && otherGrab.isSelected) return;
+
+        // 执行连接逻辑
         ConnectLoopNext(parentWhile, otherCode);
     }
 
     private void OnTriggerExit(Collider other)
     {
+        // 当物体离开触发区，重置连接标记，允许下次连接
         hasConnected = false;
     }
 
     private void ConnectLoopNext(WhileCode parentWhile, Code otherCode)
     {
-        if (parentWhile.LoopNext != null)
-        {
-            Debug.Log($"[LoopDetect] LoopNext已存在: {parentWhile.LoopNext.name}");
-            return;
-        }
+        Debug.Log($"[LoopDetect] 连接: {parentWhile.name} -> {otherCode.name}");
 
-        Debug.Log($"[LoopDetect] 连接: {transform.parent.name} -> {otherCode.name}");
-
-        Rigidbody thisRb = transform.parent.GetComponent<Rigidbody>();
         Rigidbody otherRb = otherCode.GetComponent<Rigidbody>();
+        Collider selfCol = parentWhile.GetComponent<Collider>();
+        Collider otherCol = otherCode.GetComponent<Collider>();
 
-        bool thisWasKinematic = false;
-        bool otherWasKinematic = false;
-
-        if (thisRb != null)
+        // 1. 物理安全：禁用两者之间的碰撞，防止吸附瞬间产生物理排斥弹飞
+        if (selfCol != null && otherCol != null)
         {
-            thisWasKinematic = thisRb.isKinematic;
-            thisRb.isKinematic = true;
+            Physics.IgnoreCollision(selfCol, otherCol, true);
         }
+
+        // 2. Rigidbody 处理：彻底禁用子块的物理模拟
         if (otherRb != null)
         {
-            otherWasKinematic = otherRb.isKinematic;
             otherRb.isKinematic = true;
+            otherRb.useGravity = false;
+            otherRb.detectCollisions = false; // 关键：让子块不再参与物理碰撞计算
         }
 
+        // 3. 逻辑和层级设置
         parentWhile.LoopNext = otherCode;
-        
-        otherCode.transform.SetParent(transform.parent, false);
+
+        // 使用 true 保持世界坐标，然后下一步再设置 localPosition 确保过渡平滑
+        otherCode.transform.SetParent(parentWhile.transform, true);
+
+        // 4. 精确对齐位置
         otherCode.transform.localPosition = new Vector3(-1, 0, 0);
         otherCode.transform.localEulerAngles = Vector3.zero;
-        otherCode.transform.localScale = new Vector3(1, 1, 1);
-        
-        Physics.SyncTransforms();
+        otherCode.transform.localScale = Vector3.one;
 
-        if (thisRb != null)
-            thisRb.isKinematic = thisWasKinematic;
-        if (otherRb != null)
-            otherRb.isKinematic = otherWasKinematic;
-        
-        ConnectionController controller = transform.parent.GetComponentInChildren<ConnectionController>();
+        // 5. 刷新 UI 或连接线
+        ConnectionController controller = parentWhile.GetComponentInChildren<ConnectionController>();
         if (controller != null)
         {
             controller.Refresh();
         }
-        
+
+        // 6. 同步物理变换
+        Physics.SyncTransforms();
+
         hasConnected = true;
     }
 }

@@ -19,7 +19,7 @@ public class DetectCollider : MonoBehaviour
         // 1. 状态检查：如果我已经有下一个了，就不再吸附
         if (myCode.next != null) return;
 
-        // 2. 抓取检查：如果任意一方正被抓着，通常不吸附（除非你想要抓着吸附的效果，可以注释掉这两段）
+        // 2. 抓取检查：如果任意一方正被抓着，通常不吸附
         XRGrabInteractable myGrab = transform.parent.GetComponent<XRGrabInteractable>();
         if (myGrab != null && myGrab.isSelected) return;
 
@@ -35,7 +35,7 @@ public class DetectCollider : MonoBehaviour
 
     private void ConnectCode(Code self, Code otherCode)
     {
-        Debug.Log($"[Detect] 永久连接: {self.name} -> {otherCode.name}");
+        // Debug.Log($"[Detect] 永久连接: {self.name} -> {otherCode.name}");
 
         Rigidbody otherRb = otherCode.GetComponent<Rigidbody>();
         Collider selfCol = self.GetComponent<Collider>();
@@ -56,7 +56,7 @@ public class DetectCollider : MonoBehaviour
             otherRb.detectCollisions = false; // 让子块的刚体不再参与物理碰撞计算
         }
 
-        // 2. 不要把子块设为 Trigger，否则以后抓不到它
+        // 2. 不要把子块设为 Trigger，否则你以后抓不到它
         if (otherCol != null)
         {
             otherCol.isTrigger = false;
@@ -67,7 +67,7 @@ public class DetectCollider : MonoBehaviour
         otherCode.transform.SetParent(self.transform, true); // 改为 true，保持世界坐标尝试
 
         // 4. 精确对齐
-        otherCode.transform.localPosition = new Vector3(-1.1f, 0, 0);
+        otherCode.transform.localPosition = new Vector3(-1, 0, 0);
         otherCode.transform.localEulerAngles = Vector3.zero;
 
         hasConnected = true;
