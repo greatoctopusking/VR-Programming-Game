@@ -78,7 +78,6 @@ public class LoopDetectCollider : MonoBehaviour
         // 4. 精确对齐位置
         otherCode.transform.localPosition = new Vector3(-1, 0, 0);
         otherCode.transform.localEulerAngles = Vector3.zero;
-        otherCode.transform.localScale = Vector3.one;
 
         // 5. 刷新 UI 或连接线
         ConnectionController controller = parentWhile.GetComponentInChildren<ConnectionController>();

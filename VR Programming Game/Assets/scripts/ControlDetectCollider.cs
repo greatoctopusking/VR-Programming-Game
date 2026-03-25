@@ -27,7 +27,6 @@ public class ControlDetectCollider : MonoBehaviour
         nextCodeTrans.SetParent(transform.parent, false);
         nextCodeTrans.localPosition = new Vector3(-1, 0, 0);
         nextCodeTrans.localEulerAngles = Vector3.zero;
-        nextCodeTrans.localScale = new Vector3(1, 1, 1);
 
         Physics.SyncTransforms();
     }

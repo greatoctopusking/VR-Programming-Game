@@ -233,7 +233,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 19.05, y: 1.13, z: 12.69}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4110060894946040425}
@@ -390,7 +390,7 @@ MonoBehaviour:
   m_SnapToColliderVolume: 1
   m_ReinitializeDynamicAttachEverySingleGrab: 1
   m_AttachEaseInTime: 0.15
-  m_MovementType: 1
+  m_MovementType: 0
   m_PredictedVisualsTransform: {fileID: 0}
   m_VelocityDamping: 1
   m_VelocityScale: 1
@@ -485,7 +485,7 @@ Transform:
   m_GameObject: {fileID: 2342102476194549176}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2, y: 0, z: -0}
+  m_LocalPosition: {x: -3, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -857,8 +857,8 @@ Transform:
   m_GameObject: {fileID: 6241808755878024431}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -1, y: -0, z: 0.4}
-  m_LocalScale: {x: 0.2, y: 0.5, z: 0.2}
+  m_LocalPosition: {x: -1.5, y: -0, z: 0.4}
+  m_LocalScale: {x: 0.2, y: 1, z: 0.2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8334418646953871916}
@@ -927,9 +927,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   whileCode: {fileID: 3383859396964916584}
   backModule: {fileID: 7931545115700853735}
-  baseLength: 0.5
-  lengthPerCode: 0.5
-  initialBackX: -2
 --- !u!1 &6518845750644481680
 GameObject:
   m_ObjectHideFlags: 0
