@@ -76,6 +76,7 @@ public class DetectCollider : MonoBehaviour
 
         otherCode.transform.localPosition = targetPos;
         otherCode.transform.localEulerAngles = Vector3.zero;
+        otherCode.transform.localScale = Vector3.one;
         Physics.SyncTransforms();
     }
 }

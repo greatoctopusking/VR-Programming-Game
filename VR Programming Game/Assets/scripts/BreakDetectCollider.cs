@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
@@ -9,7 +10,6 @@ public class BreakDetectCollider : MonoBehaviour
     {
         if (hasConnected) return;
 
-        // 1. ��ȡ����������� WhileCode �� �Է��� Code
         WhileCode parentWhile = transform.parent.GetComponentInParent<WhileCode>();
         Code otherCode = other.GetComponentInParent<Code>();
 
@@ -18,50 +18,41 @@ public class BreakDetectCollider : MonoBehaviour
             return;
         }
 
-        // 2. ״̬��飺��� next ·���Ѿ��п��ˣ���������
         if (parentWhile.next != null)
         {
             return;
         }
 
-        // 3. ��ǩ���
         if (!other.CompareTag("CodeBlock") && !otherCode.CompareTag("CodeBlock"))
         {
             return;
         }
 
-        // 4. ץȡ��飺˫�������ڱ�ץȡ״̬ʱ�Ŵ�������
         XRGrabInteractable myGrab = transform.parent.GetComponent<XRGrabInteractable>();
         if (myGrab != null && myGrab.isSelected) return;
 
         XRGrabInteractable otherGrab = otherCode.GetComponent<XRGrabInteractable>();
         if (otherGrab != null && otherGrab.isSelected) return;
 
-        // ִ������
         ConnectNext(parentWhile, otherCode);
     }
 
     private void OnTriggerExit(Collider other)
     {
-        // �뿪���������ñ��
         hasConnected = false;
     }
 
     private void ConnectNext(WhileCode parentWhile, Code otherCode)
     {
-        Debug.Log($"[BreakDetect] ����ѭ����·��: {parentWhile.name} -> {otherCode.name}");
-
         Rigidbody otherRb = otherCode.GetComponent<Rigidbody>();
         Collider selfCol = parentWhile.GetComponent<Collider>();
         Collider otherCol = otherCode.GetComponent<Collider>();
 
-        // 1. ������ȫ����ֹ�ص����µ�������ײ��ͻ
         if (selfCol != null && otherCol != null)
         {
             Physics.IgnoreCollision(selfCol, otherCol, true);
         }
 
-        // 2. Rigidbody ��������������ģ�����ײ���
         if (otherRb != null)
         {
             otherRb.isKinematic = true;
@@ -69,36 +60,52 @@ public class BreakDetectCollider : MonoBehaviour
             otherRb.detectCollisions = false;
         }
 
-        // 3. �����߼��Ͳ㼶��ϵ
+        if (otherCol != null)
+        {
+            otherCol.isTrigger = false;
+        }
+
         parentWhile.next = otherCode;
-        
-        Transform backTransform = parentWhile.transform.Find("Back"); // �ҵ� Back ���������
+
+        Transform backTransform = parentWhile.transform.Find("Back");
 
         if (backTransform != null)
         {
-            // ��������Ϊ Back���������ͻ���뵽 Back ������ϵ
-            otherCode.transform.SetParent(backTransform, true);
+            otherCode.transform.SetParent(backTransform, false);
         }
         else
         {
-            // ���û�ҵ� Back������ƴ����������ֹ������
-            otherCode.transform.SetParent(parentWhile.transform, true);
+            otherCode.transform.SetParent(parentWhile.transform, false);
         }
 
-        // 4. ��ȷ����λ��
-        otherCode.transform.localPosition = new Vector3(-1, 0, 0);
-        otherCode.transform.localEulerAngles = Vector3.zero;
+        hasConnected = true;
+        StartCoroutine(SmoothConnect(parentWhile, otherCode));
 
-        // 5. ˢ�� UI ��������
         ConnectionController controller = parentWhile.GetComponentInChildren<ConnectionController>();
         if (controller != null)
         {
             controller.Refresh();
         }
+    }
 
-        // 6. ͬ����������任
+    private IEnumerator SmoothConnect(WhileCode parentWhile, Code otherCode)
+    {
+        Vector3 targetPos = new Vector3(-1f, 0, 0);
+        Vector3 startPos = otherCode.transform.localPosition;
+        float duration = 0.15f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            otherCode.transform.localPosition = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        otherCode.transform.localPosition = targetPos;
+        otherCode.transform.localEulerAngles = Vector3.zero;
+        otherCode.transform.localScale = Vector3.one;
         Physics.SyncTransforms();
-
-        hasConnected = true;
     }
 }

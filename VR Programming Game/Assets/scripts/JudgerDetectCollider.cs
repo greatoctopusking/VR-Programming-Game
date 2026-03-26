@@ -1,55 +1,43 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class JudgerDetectCollider : MonoBehaviour
 {
-    public Collider Detect; // �����������
+    public Collider Detect;
     private bool hasConnected = false;
 
     private void OnTriggerStay(Collider other)
     {
-        // 1. �����ǰ��λ�Ѿ������˶�����ֱ�ӷ���
         if (hasConnected) return;
 
-        // 2. ��ȡ��λ�ĸ����壨IfCode �� WhileCode��
         Code parentBlock = transform.parent.GetComponent<Code>();
         if (parentBlock == null) return;
 
-        // 3. ����λ�Ƿ��Ѿ�ռ���ˣ�ͨ��֮ǰд�� GetJudger �߼���
         if (GetJudger() != null) return;
 
-        // 4. ��ȡ�Է������Ƿ�Ϊ�����ж��� (BoolCode)
-        // ʹ�� GetComponentInParent ��Ϊ�˷�ֹץ�������ϵ�����ײ��
         BoolCode incomingJudger = other.GetComponentInParent<BoolCode>();
-        // ����Է����� BoolCode�����߶Է��������Լ��ĸ����壬�����
         if (incomingJudger == null || incomingJudger.gameObject == transform.parent.gameObject) return;
 
-        // 5. ץȡ��飺����ҡ��ɿ����ж���ʱ��ִ������������
         XRGrabInteractable judgerGrab = incomingJudger.GetComponent<XRGrabInteractable>();
         if (judgerGrab != null && judgerGrab.isSelected)
         {
             return;
         }
 
-        // 6. ��ǩ��飺ȷ���Է����� CodeBlock ��ǩ
-        if (!other.CompareTag("CodeBlock") && !incomingJudger.CompareTag("CodeBlock")) return;
+        if (!other.CompareTag("BoolCodeBlock") && !incomingJudger.CompareTag("BoolCodeBlock")) return;
 
-        // 7. ִ���ж������е������߼�
         ConnectJudger(incomingJudger);
     }
 
-
     private void ConnectJudger(BoolCode judger)
     {
-        // 1. ��ȡ����������
         Transform parentTransform = transform.parent;
-        Rigidbody parentRb = parentTransform.GetComponent<Rigidbody>();
         Rigidbody judgerRb = judger.GetComponent<Rigidbody>();
 
         Collider parentCol = parentTransform.GetComponent<Collider>();
         Collider judgerCol = judger.GetComponent<Collider>();
 
-        // 2. ��������֮���������ײ����ֹ����˲�䱬ը��
         if (parentCol != null && judgerCol != null)
         {
             Physics.IgnoreCollision(parentCol, judgerCol, true);
@@ -57,27 +45,45 @@ public class JudgerDetectCollider : MonoBehaviour
 
         if (judgerRb != null)
         {
-            judgerRb.isKinematic = true;         // ��Ϊ�˶�ѧ����������Ӱ��
-            judgerRb.useGravity = false;          // �ر�����
-            judgerRb.detectCollisions = false;    // �����޸ģ����ӿ鲻�ٲ���������ײ���㣬��ֹ���Ÿ�����
+            judgerRb.isKinematic = true;
+            judgerRb.useGravity = false;
+            judgerRb.detectCollisions = false;
         }
 
-        // 3. �߼����� (����ԭ���߼�)
+        if (judgerCol != null)
+        {
+            judgerCol.isTrigger = false;
+        }
+
         SetJudger(judger);
 
-        // 4. �����߼��Ͳ㼶
-        judger.transform.SetParent(parentTransform, true);
+        judger.transform.SetParent(parentTransform, false);
 
-        // ��ȷ���뵽 Judger ��λ
-        judger.transform.localPosition = new Vector3(0, 0, -1);
-        judger.transform.localEulerAngles = Vector3.zero;
-
-        Physics.SyncTransforms();
         hasConnected = true;
-
-        // ע�⣺���ﲻ�ٽ� parentRb �Ļض���ѧ����Ϊ��Ϊ��̿飬ͨ�������Ӻ󱣳� Kinematic ����ȶ���
-        // ������������������Ӱ�죬���Ը�����Ҫ�ֶ����� parentRb.isKinematic = false;
+        StartCoroutine(SmoothConnect(judger));
     }
+
+    private IEnumerator SmoothConnect(BoolCode judger)
+    {
+        Vector3 targetPos = new Vector3(0, 0, -1);
+        Vector3 startPos = judger.transform.localPosition;
+        float duration = 0.15f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            judger.transform.localPosition = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        judger.transform.localPosition = targetPos;
+        judger.transform.localEulerAngles = Vector3.zero;
+        judger.transform.localScale = Vector3.one;
+        Physics.SyncTransforms();
+    }
+
     private BoolCode GetJudger()
     {
         IfCode ifCode = transform.parent.GetComponent<IfCode>();
