@@ -10,6 +10,7 @@ public class CodeManager : MonoBehaviour
 {
     public bool Coding = false;
     public Transform First = null;
+    public GameObject robot = null;
 
     private Coroutine playRoutine = null;
     private Stack<WhileCode> loopStack = new Stack<WhileCode>();
@@ -19,8 +20,19 @@ public class CodeManager : MonoBehaviour
     public InputActionAsset inputActions;
     private InputAction leftTriggerAction;
 
+    public static GameObject Robot { get; private set; }
+    public static Animator RobotAnimator { get; private set; }
+    public static Transform RobotTarget { get; private set; }
+
     private void Awake()
     {
+        if (robot != null)
+        {
+            Robot = robot;
+            RobotTarget = robot.transform;
+            RobotAnimator = robot.GetComponent<Animator>();
+        }
+
         if (inputActions != null)
         {
             leftTriggerAction = inputActions.FindAction("Activate");
@@ -41,6 +53,16 @@ public class CodeManager : MonoBehaviour
 
     private IEnumerator PlayCoroutine()
     {
+        if (RobotAnimator != null)
+        {
+            RobotAnimator.SetBool("Open_Anim", true);
+            yield return new WaitForSeconds(4.8f);
+        }
+        else
+        {
+            Debug.Log("[PlayCoroutine] RobotAnimator is null!");
+        }
+
         Code cur = First?.GetComponent<Code>();
         
         while (cur != null)
@@ -50,6 +72,8 @@ public class CodeManager : MonoBehaviour
             cur.OnComplete += () => completed = true;
 
             cur.SetHighlight(true);
+
+            Debug.Log($"执行【{cur.GetType().Name}】");
 
             cur.work();
 
@@ -98,9 +122,13 @@ public class CodeManager : MonoBehaviour
             cur = cur.next;
         }
         
-        playRoutine = null;
-        
+        if (RobotAnimator != null)
+        {
+            RobotAnimator.SetBool("Walk_Anim", false);
+            RobotAnimator.SetBool("Open_Anim", false);
+        }
 
+        playRoutine = null;
     }
 
     void Update()
@@ -144,6 +172,11 @@ public class CodeManager : MonoBehaviour
         {
             StopAllCoroutines();
             playRoutine = null;
+            if (RobotAnimator != null)
+            {
+                RobotAnimator.SetBool("Walk_Anim", false);
+                RobotAnimator.SetBool("Open_Anim", false);
+            }
             ResetAllBlocks();
         }
     }

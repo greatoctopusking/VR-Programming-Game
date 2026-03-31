@@ -74,10 +74,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   working: 0
   next: {fileID: 0}
-  speed: 10
-  target: {fileID: 0}
+  speed: 1
   direction: {x: 1, y: 0, z: 0}
-  targetDistance: 10
+  targetDistance: 1
 --- !u!54 &4900309107958672307
 Rigidbody:
   m_ObjectHideFlags: 0
