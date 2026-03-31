@@ -9,6 +9,17 @@ public class DetectCollider : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
+        if (other.name.Contains("Floor") || other.transform.root.name.Contains("Floor")) return;
+        
+        BoxCollider myCollider = GetComponent<BoxCollider>();
+        Vector3 myPos = transform.position;
+        Vector3 otherPos = other.transform.position;
+        Vector3 mySize = myCollider != null ? myCollider.size : Vector3.zero;
+        
+        Debug.Log($"[DetectCollider] 触发: {other.name}, 我的父: {transform.parent.name}, " +
+                  $"我的位置: {myPos}, 其他位置: {otherPos}, 距离: {Vector3.Distance(myPos, otherPos):F2}, " +
+                  $"我的碰撞体大小: {mySize}");
+        
         if (hasConnected) 
         {
             Debug.Log($"[DetectCollider] {transform.parent.name} 已连接，跳过");
